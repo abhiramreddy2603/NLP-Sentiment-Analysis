@@ -1,67 +1,30 @@
-
 import streamlit as st
-import joblib
-import re
-import string
+import pickle
 
-import nltk
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-from nltk.stem import WordNetLemmatizer
+with open("logistic_model.pkl", "rb") as file:
+    model = pickle.load(file)
 
+st.title("Diabetes Prediction")
 
-# Download required NLTK resources
-nltk.download("stopwords", quiet=True)
-nltk.download("punkt", quiet=True)
-nltk.download("punkt_tab", quiet=True)
-nltk.download("wordnet", quiet=True)
+st.write("Enter the patient details:")
 
+pregnancies = st.number_input("Pregnancies", min_value=0)
+glucose = st.number_input("Glucose", min_value=0)
+blood_pressure = st.number_input("Blood Pressure", min_value=0)
+skin_thickness = st.number_input("Skin Thickness", min_value=0)
+insulin = st.number_input("Insulin", min_value=0)
+bmi = st.number_input("BMI", min_value=0.0)
+dpf = st.number_input("Diabetes Pedigree Function", min_value=0.0)
+age = st.number_input("Age", min_value=1)
 
-# Load Model and TF-IDF
-model = joblib.load("sentiment_model.pkl")
-tfidf = joblib.load("tfidf_vectorizer.pkl")
+if st.button("Predict"):
 
+    data = [[pregnancies, glucose, blood_pressure,
+             skin_thickness, insulin, bmi, dpf, age]]
 
-# Text Cleaning
-lemmatizer = WordNetLemmatizer()
-stop_words = set(stopwords.words("english"))
+    prediction = model.predict(data)
 
-
-def clean_text(text):
-    text = str(text).lower()
-    text = re.sub(r"http\S+|www\S+", " ", text)
-    text = re.sub(r"<.*?>", " ", text)
-    text = re.sub(r"[^\x00-\x7F]+", " ", text)
-    text = text.translate(str.maketrans("", "", string.punctuation))
-    text = re.sub(r"\d+", " ", text)
-    text = re.sub(r"\s+", " ", text).strip()
-
-    tokens = word_tokenize(text)
-    tokens = [w for w in tokens if w not in stop_words and len(w) > 2]
-    tokens = [lemmatizer.lemmatize(w) for w in tokens]
-
-    return " ".join(tokens)
-
-
-# Streamlit App
-st.title("Customer Review Sentiment Analysis")
-
-st.write("Enter a customer review to predict its sentiment.")
-
-
-review = st.text_area("Enter your review:")
-
-
-if st.button("Predict Sentiment"):
-
-    if review.strip() == "":
-        st.warning("Please enter a review.")
-
+    if prediction[0] == 1:
+        st.error("The person is likely to have diabetes.")
     else:
-        cleaned_review = clean_text(review)
-
-        features = tfidf.transform([cleaned_review])
-
-        prediction = model.predict(features)[0]
-
-        st.success(f"Predicted Sentiment: {prediction}")
+        st.success("The person is unlikely to have diabetes.")
