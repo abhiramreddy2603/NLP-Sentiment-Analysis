@@ -1,34 +1,20 @@
 # NLP Sentiment Analysis
 
-A machine learning project for analyzing customer reviews and classifying them into **Positive, Neutral, and Negative** sentiment categories.
+A machine learning project that analyses mobile customer reviews and classifies them into **Positive, Neutral, and Negative** sentiment categories. The project includes exploratory data analysis, text preprocessing, model comparison, and a Streamlit application for interactive predictions.
 
-## Project Objective
+## Project Overview
 
-The objective of this project is to extract sentiment from customer reviews and provide an automated way to understand customer feedback.
-
-The project covers:
-
-- Exploratory Data Analysis (EDA)
-- Text preprocessing and cleaning
-- Sentiment label creation from star ratings
-- TF-IDF feature extraction
-- Machine learning model training and evaluation
-- Model comparison
-- Sentiment prediction through a Streamlit application
+The objective is to extract sentiment from customer review text and provide an automated way to understand customer feedback.
 
 ## Dataset
 
-The dataset contains **1,440 customer reviews** with the following columns:
+The dataset contains **1,440 customer reviews** with three columns:
 
 - `title` — Review title
 - `rating` — Star rating
 - `body` — Customer review text
 
-The original dataset contains no missing values or duplicate rows.
-
-### Sentiment Labeling
-
-The sentiment labels were derived from the star ratings:
+The original dataset contains no missing values or duplicate rows. Sentiment labels are derived from ratings:
 
 | Rating | Sentiment |
 |---|---|
@@ -36,142 +22,100 @@ The sentiment labels were derived from the star ratings:
 | 3 stars | Neutral |
 | 4–5 stars | Positive |
 
-After text cleaning, empty reviews were removed, resulting in **1,436 usable reviews**.
+After text cleaning, four empty reviews were removed, leaving **1,436 usable reviews**.
 
-Final sentiment distribution:
-
-| Sentiment | Reviews | Percentage |
+| Sentiment | Reviews | Share |
 |---|---:|---:|
 | Negative | 508 | 35.4% |
 | Neutral | 199 | 13.9% |
 | Positive | 729 | 50.8% |
 
-The dataset is therefore somewhat imbalanced, with Neutral having the fewest examples.
+The classes are imbalanced, with fewer Neutral examples.
 
-## Project Workflow
+## Workflow
 
-```text
-Customer Reviews
-       ↓
-Data Loading & EDA
-       ↓
-Text Cleaning
-       ↓
-Sentiment Label Creation
-       ↓
-Train-Test Split (80:20)
-       ↓
-TF-IDF Feature Extraction
-       ↓
-Model Training
-       ↓
-Model Evaluation
-       ↓
-Best Model Selection
-       ↓
-Model & Vectorizer Serialization
-       ↓
-Streamlit Sentiment Prediction App
-```
+1. Exploratory Data Analysis (EDA)
+2. Text cleaning and preprocessing
+3. Sentiment label creation from star ratings
+4. TF-IDF feature extraction
+5. Train-test split (80:20, stratified, random state 42)
+6. Model training and comparison
+7. Evaluation using accuracy, weighted precision, weighted recall, weighted F1, and confusion matrices
+8. Selection and serialization of the best model
+9. Streamlit application for new review predictions
 
 ## Text Preprocessing
 
-The review text is cleaned using the following steps:
+The training notebook and Streamlit application use the following steps:
 
 - Convert text to lowercase
-- Remove URLs
-- Remove HTML tags
-- Remove non-ASCII characters
-- Remove punctuation
-- Remove numbers
-- Remove extra spaces
-- Tokenize the text
-- Remove English stopwords
-- Remove very short tokens
+- Remove URLs and HTML tags
+- Remove non-ASCII characters, punctuation, and numbers
+- Normalize whitespace
+- Tokenize text
+- Remove English stopwords and tokens shorter than three characters
 - Apply WordNet lemmatization
 
 ## Feature Extraction
 
-**TF-IDF (Term Frequency-Inverse Document Frequency)** is used to convert the cleaned review text into numerical features.
+TF-IDF converts cleaned review text into numerical features.
 
-Configuration:
+- Maximum features: `5,000`
+- Training set: `1,148` reviews
+- Test set: `288` reviews
 
-- Maximum features: `5000`
-- Train-test split: `80:20`
-- Stratified split
-- Random state: `42`
+## Models and Results
 
-The training set contains **1,148 reviews**, while the test set contains **288 reviews**.
+Three models were evaluated on the same held-out test set:
 
-## Machine Learning Models
+| Model | Accuracy | Weighted Precision | Weighted Recall | Weighted F1 |
+|---|---:|---:|---:|---:|
+| Logistic Regression | 74.31% | 71.11% | 74.31% | 69.21% |
+| Random Forest | 72.22% | 62.76% | 72.22% | 66.48% |
+| **Linear SVM** | **75.69%** | **73.94%** | **75.69%** | **73.40%** |
 
-Three classification algorithms were evaluated:
+**Linear SVM** was selected because it achieved the highest weighted F1 score in this comparison.
 
-1. **Logistic Regression**
-2. **Random Forest**
-3. **Linear Support Vector Machine (SVM)**
-
-The models were evaluated using:
-
-- Accuracy
-- Weighted Precision
-- Weighted Recall
-- Weighted F1 Score
-- Confusion Matrix
-
-### Best Model
-
-The **Linear SVM** achieved the best overall performance among the three models.
-
-- Accuracy: approximately **75.7%**
-- Weighted F1 Score: approximately **73.3%**
-
-The model performed best on Positive and Negative reviews, while the Neutral class was more difficult to classify because it had fewer examples and greater textual ambiguity.
-
-## Model Files
-
-The trained model and TF-IDF vectorizer are saved using Joblib:
-
-```text
-sentiment_model.pkl
-tfidf_vectorizer.pkl
-```
-
-These files are loaded by the Streamlit application for making predictions on new reviews.
+The Neutral class was the most difficult to classify. Its F1 score for Linear SVM was approximately 0.30, reflecting the smaller number of Neutral examples and ambiguity in mixed customer reviews.
 
 ## Streamlit Application
 
-The project includes a Streamlit application that allows a user to:
+The app accepts a customer review, applies the same text-cleaning steps, transforms it using the saved TF-IDF vectorizer, and predicts its sentiment using the saved Linear SVM model.
 
-1. Enter a customer review.
-2. Clean and preprocess the review.
-3. Transform the review using the saved TF-IDF vectorizer.
-4. Pass the features to the saved Linear SVM model.
-5. Display the predicted sentiment.
+### Run Locally
 
-### Run the Application
-
-Install the required packages:
+Use Python 3.12 for the environment, then run:
 
 ```bash
 pip install -r requirements.txt
-```
-
-Then start the Streamlit application:
-
-```bash
 streamlit run app.py
 ```
 
-The application will open in your browser and allow you to enter reviews for sentiment prediction.
+The app requires these model files in the repository root:
+
+- `sentiment_model.pkl`
+- `tfidf_vectorizer.pkl`
+
+## Deployment — Streamlit Community Cloud
+
+1. Push the project files to a GitHub repository.
+2. Confirm that `app.py`, `requirements.txt`, `sentiment_model.pkl`, and `tfidf_vectorizer.pkl` are in the repository root.
+3. Open [Streamlit Community Cloud](https://share.streamlit.io/) and sign in with GitHub.
+4. Select **Create app**.
+5. Choose this repository, the `main` branch, and `app.py` as the main file.
+6. In Advanced settings, select **Python 3.12**.
+7. Deploy the app and wait for the build to finish.
+8. Test Positive, Negative, Neutral, empty, and punctuation-only review inputs.
+9. Add the generated public app URL to this README under a **Live Application** heading.
+
+Streamlit Community Cloud redeploys the app when repository changes are pushed to GitHub.
 
 ## Repository Structure
 
 ```text
 NLP-Sentiment-Analysis/
-│
 ├── README.md
-├── NLP_Sentiment_Analysis.ipynb
+├── NLP_PROJECT.ipynb
 ├── nlp_project.py
 ├── dataset.xlsx
 ├── app.py
@@ -181,57 +125,38 @@ NLP-Sentiment-Analysis/
 └── Customer Review Sentiment.pptx
 ```
 
-### File Description
-
-| File | Description |
-|---|---|
-| `README.md` | Project documentation |
-| `NLP_Sentiment_Analysis.ipynb` | Complete project notebook |
-| `nlp_project.py` | Python version of the project code |
-| `dataset.xlsx` | Customer review dataset |
-| `app.py` | Streamlit sentiment prediction application |
-| `requirements.txt` | Python dependencies for the application |
-| `sentiment_model.pkl` | Trained best-performing sentiment model |
-| `tfidf_vectorizer.pkl` | Fitted TF-IDF vectorizer |
-| `Customer Review Sentiment.pptx` | Project presentation |
-
 ## Limitations
 
 - Sentiment labels are derived from star ratings rather than manually annotated sentiment.
-- The Neutral class has relatively few examples.
-- Some reviews can contain mixed or ambiguous opinions.
-- Sarcasm and contextual meaning can be difficult for traditional TF-IDF-based models.
+- The Neutral class has fewer training examples.
+- Sarcasm, mixed opinions, and contextual meaning can be difficult for traditional TF-IDF-based models.
 - The current model uses the review body for classification.
-
-## Future Improvements
-
-Possible improvements include:
-
-- Increasing the number of Neutral training examples
-- Hyperparameter tuning
-- Cross-validation
-- Trying n-gram based TF-IDF features
-- Using class-weighting techniques
-- Experimenting with contextual NLP models such as transformer-based models
-- Adding aspect-based sentiment analysis
-- Improving deployment and monitoring
+- The app's output is a model prediction, not a guaranteed interpretation of a customer's intent.
 
 ## Technologies Used
 
-- Python
-- Pandas
-- NumPy
-- NLTK
-- Scikit-learn
-- Matplotlib
-- Seaborn
-- WordCloud
-- Joblib
-- Streamlit
-- Jupyter Notebook / Google Colab
+Python, Pandas, NumPy, NLTK, Scikit-learn, TF-IDF, Matplotlib, Seaborn, WordCloud, Joblib, Streamlit, Jupyter Notebook, and Google Colab.
 
-## Project Outcome
+## Project Files
 
-The project successfully implements an end-to-end customer review sentiment analysis pipeline, from raw review data and preprocessing through model evaluation and deployment preparation.
+- `NLP_PROJECT.ipynb` — Project notebook, including EDA, preprocessing, training, and evaluation
+- `nlp_project.py` — Python implementation
+- `dataset.xlsx` — Customer review dataset
+- `app.py` — Streamlit prediction application
+- `sentiment_model.pkl` — Selected trained Linear SVM model
+- `tfidf_vectorizer.pkl` — Fitted TF-IDF vectorizer
+- `requirements.txt` — Application dependencies
+- `Customer Review Sentiment.pptx` — Project presentation
 
-The **Linear SVM** model was selected as the final model based on the highest weighted F1 score among the evaluated models, and the trained model and TF-IDF vectorizer are provided for use by the Streamlit application.
+## Future Improvements
+
+- Increase the number of Neutral training examples
+- Test n-gram features, class weighting, and hyperparameter tuning
+- Evaluate with cross-validation
+- Explore contextual NLP models
+- Investigate negation handling and mixed-sentiment reviews
+- Extend toward aspect-based sentiment analysis
+
+---
+
+*This project was completed as part of data science training. It is an educational machine-learning demonstration.*
